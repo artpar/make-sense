@@ -15,6 +15,7 @@ import {LabelName} from "../../../../store/labels/types";
 import {LabelsSelector} from "../../../../store/selectors/LabelsSelector";
 import {PopupWindowType} from "../../../../data/enums/PopupWindowType";
 import {updateActivePopupType} from "../../../../store/general/actionCreators";
+import TextInput from "../../../Common/TextInput/TextInput";
 
 interface IProps {
     size: ISize;
@@ -52,7 +53,7 @@ class LabelInputField extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         requestAnimationFrame(() => {
-            this.setState({ animate: true });
+            this.setState({animate: true});
         });
     }
 
@@ -67,15 +68,6 @@ class LabelInputField extends React.Component<IProps, IState> {
         );
     }
 
-    private openDropdown = () => {
-        if (LabelsSelector.getLabelNames().length === 0) {
-            this.props.updateActivePopupType(PopupWindowType.UPDATE_LABEL_NAMES);
-        } else {
-            this.setState({isOpen: true});
-            window.addEventListener(EventType.MOUSE_DOWN, this.closeDropdown);
-        }
-    };
-
     private closeDropdown = (event: MouseEvent) => {
         const mousePosition: IPoint = {x: event.clientX, y: event.clientY};
         const clientRect = this.dropdown.getBoundingClientRect();
@@ -88,11 +80,11 @@ class LabelInputField extends React.Component<IProps, IState> {
 
         if (!RectUtil.isPointInside(dropDownRect, mousePosition)) {
             this.setState({isOpen: false});
-            window.removeEventListener(EventType.MOUSE_DOWN, this.closeDropdown)
+            // window.removeEventListener(EventType.MOUSE_DOWN, this.closeDropdown)
         }
     };
 
-    private getDropdownStyle = ():React.CSSProperties => {
+    private getDropdownStyle = (): React.CSSProperties => {
         const clientRect = this.dropdownLabel.getBoundingClientRect();
         const height: number = Math.min(this.props.options.length, this.dropdownOptionCount) * this.dropdownOptionHeight;
         const style = {
@@ -101,16 +93,16 @@ class LabelInputField extends React.Component<IProps, IState> {
             left: clientRect.left
         };
 
-        if (window.innerHeight * 2/3 < clientRect.top)
+        if (window.innerHeight * 2 / 3 < clientRect.top)
             return Object.assign(style, {top: clientRect.top - this.dropdownMargin - height});
         else
             return Object.assign(style, {top: clientRect.bottom + this.dropdownMargin});
     };
 
     private getDropdownOptions = () => {
-        const onClick = (id: string, event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        const onClick = (id: string, event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
             this.setState({isOpen: false});
-            window.removeEventListener(EventType.MOUSE_DOWN, this.closeDropdown);
+            // window.removeEventListener(EventType.MOUSE_DOWN, this.closeDropdown);
             this.props.onSelectLabel(this.props.id, id);
             this.props.updateHighlightedLabelId(null);
             this.props.updateActiveLabelId(this.props.id);
@@ -133,7 +125,7 @@ class LabelInputField extends React.Component<IProps, IState> {
         this.props.updateHighlightedLabelId(this.props.id);
     };
 
-    private mouseLeaveHandler =() => {
+    private mouseLeaveHandler = () => {
         this.props.updateHighlightedLabelId(null);
     };
 
@@ -141,9 +133,14 @@ class LabelInputField extends React.Component<IProps, IState> {
         this.props.updateActiveLabelId(this.props.id);
     };
 
+    private onChange = (event) => {
+        this.props.onSelectLabel(this.props.id, event.target.value);
+        event.stopPropagation();
+    }
+
     public render() {
         const {size, id, value, onDelete} = this.props;
-        return(
+        return (
             <div
                 className={this.getClassName()}
                 style={{
@@ -164,27 +161,15 @@ class LabelInputField extends React.Component<IProps, IState> {
                 >
                     <div className="Marker"/>
                     <div className="Content">
-                        <div className="ContentWrapper">
-                            <div className="DropdownLabel"
-                                 ref={ref => this.dropdownLabel = ref}
-                                 onClick={this.openDropdown}
-                            >
-                                {value ? value.name : "Select label"}
-                            </div>
-                            {this.state.isOpen && <div
-                                className="Dropdown"
-                                style={this.getDropdownStyle()}
-                                ref={ref => this.dropdown = ref}
-                            >
-                                <Scrollbars
-                                    renderTrackHorizontal={props => <div {...props} className="track-horizontal"/>}
-                                >
-                                    <div>
-                                        {this.getDropdownOptions()}
-                                    </div>
-                                </Scrollbars>
-
-                            </div>}
+                        <div className="ContentWrapper" style={{
+                            width: "200px",
+                        }}>
+                            <TextInput
+                                key={"Label"}
+                                isPassword={false}
+                                value={value ? value.name : ""}
+                                onChange={(event) => this.onChange(event)}
+                            />
                         </div>
                         <div className="ContentWrapper">
                             <ImageButton
